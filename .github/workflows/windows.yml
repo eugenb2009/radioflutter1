@@ -1,0 +1,41 @@
+name: Windows
+
+# Запускаем при push в main, при pull request в main и вручную из вкладки Actions
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    # Сборка Windows идёт только на виндовых раннерах
+    runs-on: windows-latest
+    steps:
+      - name: Checkout репозитория
+        uses: actions/checkout@v4
+
+      - name: Установка Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable   # stable канал (совпадает с .metadata)
+          cache: true       # кэшируем Dart/Flutter для ускорения
+
+      - name: Установка зависимостей
+        run: flutter pub get
+
+      - name: Статический анализ
+        run: flutter analyze
+
+      - name: Запуск тестов
+        run: flutter test
+
+      - name: Сборка Windows (release)
+        run: flutter build windows --release
+
+      - name: Загрузка собранного приложения как артефакта
+        uses: actions/upload-artifact@v4
+        with:
+          name: walkie-talkie-windows
+          path: build/windows/x64/runner/Release
